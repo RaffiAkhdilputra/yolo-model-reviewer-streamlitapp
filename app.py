@@ -86,8 +86,6 @@ with tab1:
                     st.error(f"Error loading image from URL: {e}")
 
         if uploaded_image is not None:
-            st.button("🔄 Refresh Results")
-            
             # Convert uploaded image to OpenCV format
             image = Image.open(uploaded_image).convert("RGB")
             frame_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
