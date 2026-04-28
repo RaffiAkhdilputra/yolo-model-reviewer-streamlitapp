@@ -8,7 +8,6 @@ from collections import defaultdict
 
 st.set_page_config(page_title="YOLO Model Reviewer", layout="wide")
 
-
 def _load_runtime_dependencies():
     """Load heavy/runtime deps lazily so missing system libs don't crash the app."""
     try:
