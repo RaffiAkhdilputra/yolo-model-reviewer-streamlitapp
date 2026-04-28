@@ -1,16 +1,45 @@
 import streamlit as st
-import cv2
 import numpy as np
 from PIL import Image
-import os
 import time
-from pathlib import Path
 import requests
 from io import BytesIO
-from core.model_manager import ModelManager, MODELS_DIR
-from core.overlay import draw_detections, OverlayConfig
+from collections import defaultdict
 
 st.set_page_config(page_title="YOLO Model Reviewer", layout="wide")
+
+
+def _load_runtime_dependencies():
+    """Load heavy/runtime deps lazily so missing system libs don't crash the app."""
+    try:
+        import cv2  # noqa: F401
+    except ImportError as e:
+        st.error("OpenCV failed to load in this environment.")
+        st.code(str(e))
+        st.markdown(
+            """
+            To fix this on Linux/Streamlit Cloud:
+
+            1. Keep `opencv-python-headless` in `requirements.txt`.
+            2. Add system packages in `packages.txt`:
+               - `libgl1`
+               - `libglib2.0-0`
+            """
+        )
+        st.stop()
+
+    try:
+        from core.model_manager import ModelManager, MODELS_DIR
+        from core.overlay import draw_detections, OverlayConfig
+    except Exception as e:
+        st.error("Core modules failed to load.")
+        st.code(str(e))
+        st.stop()
+
+    return cv2, ModelManager, MODELS_DIR, draw_detections, OverlayConfig
+
+
+cv2, ModelManager, MODELS_DIR, draw_detections, OverlayConfig = _load_runtime_dependencies()
 
 # Ensure models directory exists
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
@@ -102,7 +131,6 @@ with tab1:
             st.image(output_rgb, caption=f"Processed Image ({inference_time:.3f}s)", use_container_width=True)
 
             st.header("3. Evaluate (Log Output)")
-            from collections import defaultdict
             grouped_dets = defaultdict(list)
             for d in detections:
                 grouped_dets[d.bbox].append({
